@@ -1,0 +1,19 @@
+{
+    "name": "pcore/aop",
+    "type": "library",
+    "homepage": "https://github.com/pcore-framework/aop",
+    "authors": [
+        {
+            "name": "Magomedcoder",
+            "email": "info@magomedcoder.ru"
+        }
+    ],
+    "require": {
+        "php": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PCore\\Aop\\": "src/"
+        }
+    }
+}
