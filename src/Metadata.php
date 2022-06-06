@@ -6,6 +6,11 @@ namespace PCore\Aop;
 
 use Composer\Autoload\ClassLoader;
 
+/**
+ * Class Metadata
+ * @package PCore\Aop
+ * @github https://github.com/pcore-framework/aop
+ */
 class Metadata
 {
 
