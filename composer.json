@@ -9,7 +9,10 @@
         }
     ],
     "require": {
-        "php": "^8.0"
+        "php": "^8.0",
+        "pcore/utils": "dev-dev",
+        "nikic/php-parser": "^4.13",
+        "ext-pcntl": "*"
     },
     "autoload": {
         "psr-4": {
