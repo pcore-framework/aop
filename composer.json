@@ -12,7 +12,8 @@
         "php": "^8.0",
         "pcore/utils": "dev-dev",
         "nikic/php-parser": "^4.13",
-        "ext-pcntl": "*"
+        "ext-pcntl": "*",
+        "symfony/finder": "^6.0"
     },
     "autoload": {
         "psr-4": {
