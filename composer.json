@@ -1,6 +1,7 @@
 {
     "name": "pcore/aop",
     "type": "library",
+    "license": "MIT",
     "homepage": "https://github.com/pcore-framework/aop",
     "authors": [
         {
