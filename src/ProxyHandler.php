@@ -9,6 +9,7 @@ use Closure;
 use PCore\Aop\Collectors\{AspectCollector, AspectInterface};
 use PCore\Di\Reflection;
 use ReflectionException;
+use Attribute;
 
 /**
  * Trait ProxyHandler
@@ -26,10 +27,7 @@ trait ProxyHandler
     protected function __callViaProxy(string $method, Closure $callback, array $parameters): mixed
     {
         if (!isset(static::$__aspectCache[$method])) {
-            static::$__aspectCache[$method] = array_reverse([
-                ...AspectCollector::getClassAspects(__CLASS__),
-                ...AspectCollector::getMethodAspects(__CLASS__, $method)
-            ]);
+            static::$__aspectCache[$method] = array_reverse(AspectCollector::getMethodAspects(__CLASS__, $method));
         }
         /** @var AspectInterface $aspect */
         $pipeline = array_reduce(

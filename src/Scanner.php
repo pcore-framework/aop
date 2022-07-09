@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace PCore\Aop;
 
+use Attribute;
 use Composer\Autoload\ClassLoader;
 use PCore\Aop\Collectors\{AspectCollector, PropertyAttributeCollector};
+use PCore\Aop\Contracts\AspectInterface;
 use PCore\Aop\Exceptions\ProcessException;
 use PCore\Di\Reflection;
 use PCore\Utils\Filesystem;
@@ -117,9 +119,20 @@ final class Scanner
         foreach (self::$classMap as $class => $path) {
             $reflectionClass = Reflection::class($class);
             foreach ($reflectionClass->getAttributes() as $attribute) {
+                if ($attribute instanceof Attribute) {
+                    continue;
+                }
                 try {
+                    $attributeInstance = $attribute->newInstance();
                     foreach ($collectors as $collector) {
-                        $collector::collectClass($class, $attribute->newInstance());
+                        $collector::collectClass($class, $attributeInstance);
+                    }
+                    if ($attributeInstance instanceof AspectInterface) {
+                        foreach ($reflectionClass->getMethods() as $reflectionMethod) {
+                            if (!$reflectionMethod->isConstructor()) {
+                                AspectCollector::collectMethod($class, $reflectionMethod->getName(), $attributeInstance);
+                            }
+                        }
                     }
                 } catch (Throwable $throwable) {
                     echo '[NOTICE] ' . $class . ': ' . $throwable->getMessage() . PHP_EOL;

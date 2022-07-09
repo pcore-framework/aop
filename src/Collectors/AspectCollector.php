@@ -16,50 +16,44 @@ class AspectCollector extends AbstractCollector
 
     protected static array $container = [];
 
+    /**
+     * Раздел метода сбора
+     * @param string $class
+     * @param string $method
+     * @param object $attribute
+     */
     public static function collectMethod(string $class, string $method, object $attribute): void
     {
         if (self::isValid($attribute)) {
-            self::$container['method'][$class][$method][] = $attribute;
-        }
-    }
-
-    public static function collectClass(string $class, object $attribute): void
-    {
-        if (self::isValid($attribute)) {
-            self::$container['class'][$class][] = $attribute;
+            self::$container[$class][$method][] = $attribute;
         }
     }
 
     /**
-     * Возвращает фасет метода класса
+     * Возвращает аспект метода класса
+     * @param string $class
+     * @param string $method
+     * @return array
      */
     public static function getMethodAspects(string $class, string $method): array
     {
-        return self::$container['method'][$class][$method] ?? [];
+        return self::$container[$class][$method] ?? [];
     }
 
     /**
-     * Возвращает раздел определенного класса
-     *
-     * @return AspectInterface[]
-     */
-    public static function getClassAspects(string $class): array
-    {
-        return self::$container['class'][$class] ?? [];
-    }
-
-    /**
-     * Возвращает собранные классы
+     * Возвращает собранный класс
      *
      * @return AspectInterface[]
      */
     public static function getCollectedClasses(): array
     {
-        return array_unique([...array_keys(self::$container['class'] ?? []), ...array_keys(self::$container['method'] ?? [])]);
+        return array_keys(self::$container);
     }
 
     /**
      * Проверяет возможности сборки
+     * @param object $attribute
+     * @return bool
      */
     public static function isValid(object $attribute): bool
     {
