@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "pcore/utils": "v1.0.0",
+        "pcore/utils": "dev-main",
         "nikic/php-parser": "^4.13",
         "ext-pcntl": "*",
         "symfony/finder": "^6.0"
