@@ -9,7 +9,6 @@ use Closure;
 use PCore\Aop\Collectors\{AspectCollector, AspectInterface};
 use PCore\Di\Reflection;
 use ReflectionException;
-use Attribute;
 
 /**
  * Trait ProxyHandler

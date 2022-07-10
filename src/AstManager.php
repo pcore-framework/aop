@@ -2,8 +2,8 @@
 
 namespace PCore\Aop;
 
-use PhpParser\Node\Stmt\{Class_, Namespace_};
 use PhpParser\{NodeTraverser, Parser, ParserFactory};
+use PhpParser\Node\Stmt\{Class_, Namespace_};
 
 /**
  * Class AstManager

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace PCore\Aop;
 
 use PCore\Di\Reflection;
+use PhpParser\{NodeVisitorAbstract, ParserFactory};
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\{ClassConstFetch, ConstFetch, FuncCall, MethodCall, StaticCall, Variable};
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\{Class_, ClassMethod, Expression, If_, TraitUse};
-use PhpParser\{NodeVisitorAbstract, ParserFactory};
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionUnionType;
