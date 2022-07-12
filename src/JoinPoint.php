@@ -16,13 +16,13 @@ class JoinPoint
 {
 
     /**
-     * @param object $object вырезать в текущем экземпляре класса
+     * @param string $class
      * @param string $method
      * @param ArrayObject $parameters список параметров, переданных текущим методом
      * @param Closure $callback
      */
     public function __construct(
-        public object $object,
+        public string $class,
         public string $method,
         public ArrayObject $parameters,
         protected Closure $callback

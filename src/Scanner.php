@@ -7,7 +7,6 @@ namespace PCore\Aop;
 use Attribute;
 use Composer\Autoload\ClassLoader;
 use PCore\Aop\Collectors\{AspectCollector, PropertyAttributeCollector};
-use PCore\Aop\Contracts\AspectInterface;
 use PCore\Aop\Exceptions\ProcessException;
 use PCore\Di\Reflection;
 use PCore\Utils\Filesystem;
@@ -25,15 +24,17 @@ use Throwable;
 final class Scanner
 {
 
-    protected static ClassLoader $loader;
-    protected static AstManager $astManager;
-    protected static string $runtimeDir;
-    protected static string $proxyMap;
-    protected static array $classMap = [];
-    protected static array $collectors = [AspectCollector::class, PropertyAttributeCollector::class];
-    protected static bool $initialized = false;
+    private static ClassLoader $loader;
+    private static AstManager $astManager;
+    private static string $runtimeDir;
+    private static string $proxyMap;
+    private static array $classMap = [];
+    private static array $collectors = [AspectCollector::class, PropertyAttributeCollector::class];
+    private static bool $initialized = false;
 
     /**
+     * @param ClassLoader $loader
+     * @param ScannerConfig $config
      * @throws ReflectionException
      */
     public static function init(ClassLoader $loader, ScannerConfig $config): void
@@ -76,10 +77,40 @@ final class Scanner
         return $classes;
     }
 
+    public static function scanConfig(string $installedJsonDir): array
+    {
+        $installed = json_decode(file_get_contents($installedJsonDir), true);
+        $installed = $installed['packages'] ?? $installed;
+        $config = [];
+        foreach ($installed as $package) {
+            if (isset($package['extra']['pcore']['config'])) {
+                $configProvider = $package['extra']['pcore']['config'];
+                $configProvider = new $configProvider();
+                if (method_exists($configProvider, '__invoke')) {
+                    if (is_array($configItem = $configProvider())) {
+                        $config = array_merge_recursive($config, $configItem);
+                    }
+                }
+            }
+        }
+        return $config;
+    }
+
     /**
+     * @param string $class
+     * @param string $path
+     */
+    public static function addClass(string $class, string $path)
+    {
+        self::$classMap[$class] = $path;
+    }
+
+    /**
+     * @param array $collectors
+     * @return array
      * @throws ReflectionException
      */
-    protected static function getProxyMap(array $collectors): array
+    private static function getProxyMap(array $collectors): array
     {
         if (!Filesystem::exists(self::$proxyMap)) {
             $proxyDir = self::$runtimeDir . 'proxy/';
@@ -99,7 +130,7 @@ final class Scanner
         return include self::$proxyMap;
     }
 
-    protected static function generateProxyClass(string $class, string $path): string
+    private static function generateProxyClass(string $class, string $path): string
     {
         $ast = self::$astManager->getNodes($path);
         $traverser = new NodeTraverser();
@@ -107,32 +138,27 @@ final class Scanner
         $traverser->addVisitor(new PropertyHandlerVisitor($metadata));
         $traverser->addVisitor(new ProxyHandlerVisitor($metadata));
         $modifiedStmts = $traverser->traverse($ast);
-        $prettyPrinter = new Standard;
+        $prettyPrinter = new Standard();
         return $prettyPrinter->prettyPrintFile($modifiedStmts);
     }
 
     /**
+     * @param array $collectors
      * @throws ReflectionException
      */
-    protected static function collect(array $collectors): void
+    private static function collect(array $collectors): void
     {
         foreach (self::$classMap as $class => $path) {
             $reflectionClass = Reflection::class($class);
             foreach ($reflectionClass->getAttributes() as $attribute) {
-                if ($attribute instanceof Attribute) {
+                $attributeInstance = $attribute->newInstance();
+                if ($attributeInstance instanceof Attribute) {
                     continue;
                 }
                 try {
                     $attributeInstance = $attribute->newInstance();
                     foreach ($collectors as $collector) {
                         $collector::collectClass($class, $attributeInstance);
-                    }
-                    if ($attributeInstance instanceof AspectInterface) {
-                        foreach ($reflectionClass->getMethods() as $reflectionMethod) {
-                            if (!$reflectionMethod->isConstructor()) {
-                                AspectCollector::collectMethod($class, $reflectionMethod->getName(), $attributeInstance);
-                            }
-                        }
                     }
                 } catch (Throwable $throwable) {
                     echo '[NOTICE] ' . $class . ': ' . $throwable->getMessage() . PHP_EOL;
@@ -174,24 +200,4 @@ final class Scanner
             }
         }
     }
-
-    public static function scanConfig(string $installedJsonDir): array
-    {
-        $installed = json_decode(file_get_contents($installedJsonDir), true);
-        $installed = $installed['packages'] ?? $installed;
-        $config = [];
-        foreach ($installed as $package) {
-            if (isset($package['extra']['pcore']['config'])) {
-                $configProvider = $package['extra']['pcore']['config'];
-                $configProvider = new $configProvider;
-                if (method_exists($configProvider, '__invoke')) {
-                    if (is_array($configItem = $configProvider())) {
-                        $config = array_merge_recursive($config, $configItem);
-                    }
-                }
-            }
-        }
-        return $config;
-    }
-
 }

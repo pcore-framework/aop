@@ -21,7 +21,6 @@ use PhpParser\NodeVisitorAbstract;
  */
 class ProxyHandlerVisitor extends NodeVisitorAbstract
 {
-
     public function __construct(protected Metadata $metadata)
     {
     }
@@ -41,8 +40,8 @@ class ProxyHandlerVisitor extends NodeVisitorAbstract
                 return;
             }
             if (AspectCollector::getMethodAspects($this->metadata->className, $methodName)) {
-                $methodCall = new MethodCall(
-                    new Variable(new Name('this')),
+                $methodCall = new Node\Expr\StaticCall(
+                    new Node\Expr\ConstFetch(new Name('self')),
                     '__callViaProxy',
                     [
                         new Arg(new Function_()),
@@ -50,7 +49,7 @@ class ProxyHandlerVisitor extends NodeVisitorAbstract
                             'params' => $node->getParams(),
                             'stmts' => $node->stmts,
                         ])),
-                        new Arg(new FuncCall(new Name('func_get_args')))
+                        new Arg(new FuncCall(new Name('func_get_args'))),
                     ]
                 );
                 $returnType = $node->getReturnType();
@@ -62,5 +61,4 @@ class ProxyHandlerVisitor extends NodeVisitorAbstract
             }
         }
     }
-
 }

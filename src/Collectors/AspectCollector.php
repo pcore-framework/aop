@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace PCore\Aop\Collectors;
 
+use PCore\Aop\Annotations\AspectConfig;
 use PCore\Aop\Contracts\AspectInterface;
+use PCore\Aop\Scanner;
+use PCore\Di\Reflection;
+use ReflectionException;
 
 /**
  * Class AspectCollector
@@ -24,7 +28,7 @@ class AspectCollector extends AbstractCollector
      */
     public static function collectMethod(string $class, string $method, object $attribute): void
     {
-        if (self::isValid($attribute)) {
+        if ($attribute instanceof AspectInterface) {
             self::$container[$class][$method][] = $attribute;
         }
     }
@@ -51,13 +55,30 @@ class AspectCollector extends AbstractCollector
     }
 
     /**
-     * Проверяет возможности сборки
-     * @param object $attribute
-     * @return bool
+     * @throws ReflectionException
      */
-    public static function isValid(object $attribute): bool
+    public static function collectClass(string $class, object $attribute): void
     {
-        return $attribute instanceof AspectInterface;
+        if ($attribute instanceof AspectInterface) {
+            foreach (Reflection::class($class)->getMethods() as $reflectionMethod) {
+                if (!$reflectionMethod->isConstructor()) {
+                    self::$container[$class][$reflectionMethod->getName()][] = $attribute;
+                }
+            }
+        } elseif ($attribute instanceof AspectConfig) {
+            $reflectionClass = Reflection::class($attribute->class);
+            $annotation = new $class(...$attribute->params);
+            if ($attribute->method === '*') {
+                foreach ($reflectionClass->getMethods() as $reflectionMethod) {
+                    if (!$reflectionMethod->isConstructor()) {
+                        self::$container[$attribute->class][$reflectionMethod->getName()][] = $annotation;
+                    }
+                }
+            } else {
+                self::$container[$attribute->class][$attribute->method][] = $annotation;
+            }
+            Scanner::addClass($attribute->class, $reflectionClass->getFileName());
+        }
     }
 
 }

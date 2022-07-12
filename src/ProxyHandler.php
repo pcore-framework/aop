@@ -6,7 +6,8 @@ namespace PCore\Aop;
 
 use ArrayObject;
 use Closure;
-use PCore\Aop\Collectors\{AspectCollector, AspectInterface};
+use PCore\Aop\Collectors\AspectCollector;
+use PCore\Aop\Contracts\AspectInterface;
 use PCore\Di\Reflection;
 use ReflectionException;
 
@@ -18,25 +19,25 @@ use ReflectionException;
 trait ProxyHandler
 {
 
-    protected static array $__aspectCache = [];
-
     /**
+     * @param string $method
+     * @param Closure $callback
+     * @param array $parameters
+     * @return mixed
      * @throws ReflectionException
      */
-    protected function __callViaProxy(string $method, Closure $callback, array $parameters): mixed
+    protected static function __callViaProxy(string $method, Closure $callback, array $parameters): mixed
     {
-        if (!isset(static::$__aspectCache[$method])) {
-            static::$__aspectCache[$method] = array_reverse(AspectCollector::getMethodAspects(__CLASS__, $method));
-        }
+        $class = static::class;
         /** @var AspectInterface $aspect */
         $pipeline = array_reduce(
-            self::$__aspectCache[$method],
+            array_reverse(AspectCollector::getMethodAspects($class, $method)),
             fn($stack, $aspect) => fn(JoinPoint $joinPoint) => $aspect->process($joinPoint, $stack),
             fn(JoinPoint $joinPoint) => $joinPoint->process()
         );
         return $pipeline(
-            new JoinPoint($this, $method, new ArrayObject(
-                array_combine(Reflection::methodParameterNames(__CLASS__, $method), $parameters)
+            new JoinPoint($class, $method, new ArrayObject(
+                array_combine(Reflection::methodParameterNames($class, $method), $parameters)
             ), $callback)
         );
     }
