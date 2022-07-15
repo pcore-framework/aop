@@ -35,11 +35,12 @@ trait ProxyHandler
             fn($stack, $aspect) => fn(JoinPoint $joinPoint) => $aspect->process($joinPoint, $stack),
             fn(JoinPoint $joinPoint) => $joinPoint->process()
         );
-        return $pipeline(
-            new JoinPoint($class, $method, new ArrayObject(
-                array_combine(Reflection::methodParameterNames($class, $method), $parameters)
-            ), $callback)
-        );
+        $funcArgs = new ArrayObject();
+        $methodParameters = Reflection::methodParameterNames($class, $method);
+        foreach ($parameters as $key => $parameter) {
+            $funcArgs->offsetSet($methodParameters[$key], $parameter);
+        }
+        return $pipeline(new JoinPoint($class, $method, $funcArgs, $callback));
     }
 
 }

@@ -46,6 +46,8 @@ class PropertyAttributeCollector extends AbstractCollector
 
     /**
      * Возврат собранных классов
+     *
+     * @return string[]
      */
     public static function getCollectedClasses(): array
     {
