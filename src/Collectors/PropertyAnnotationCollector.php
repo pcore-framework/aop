@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace PCore\Aop\Collectors;
 
-use PCore\Aop\Contracts\PropertyAttribute;
+use PCore\Aop\Contracts\PropertyAnnotation;
 
 /**
- * Class PropertyAttributeCollector
+ * Class PropertyAnnotationCollector
  * @package PCore\Aop\Collectors
  * @github https://github.com/pcore-framework/aop
  */
-class PropertyAttributeCollector extends AbstractCollector
+class PropertyAnnotationCollector extends AbstractCollector
 {
 
     protected static array $container = [];
@@ -29,7 +29,7 @@ class PropertyAttributeCollector extends AbstractCollector
     /**
      * Возвращает все атрибуты и аннотации класса, содержащего атрибуты
      */
-    public static function getClassPropertyAttributes(string $class): array
+    public static function getByClass(string $class): array
     {
         return self::$container[$class] ?? [];
     }
@@ -37,9 +37,9 @@ class PropertyAttributeCollector extends AbstractCollector
     /**
      * Возвращает аннотацию для свойства определенного класса
      *
-     * @return PropertyAttribute[]
+     * @return PropertyAnnotation[]
      */
-    public static function getPropertyAttribute(string $class, string $property): array
+    public static function getByProperty(string $class, string $property): array
     {
         return self::$container[$class][$property] ?? [];
     }
@@ -59,7 +59,7 @@ class PropertyAttributeCollector extends AbstractCollector
      */
     protected static function isValid(object $attribute): bool
     {
-        return $attribute instanceof PropertyAttribute;
+        return $attribute instanceof PropertyAnnotation;
     }
 
 }

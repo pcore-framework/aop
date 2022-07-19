@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PCore\Aop;
 
-use PCore\Aop\Collectors\PropertyAttributeCollector;
+use PCore\Aop\Collectors\PropertyAnnotationCollector;
 
 /**
  * Trait PropertyHandler
@@ -19,7 +19,7 @@ trait PropertyHandler
     protected function __handleProperties(): void
     {
         if (!$this->__propertyHandled) {
-            foreach (PropertyAttributeCollector::getClassPropertyAttributes(self::class) as $property => $attributes) {
+            foreach (PropertyAnnotationCollector::getByClass(self::class) as $property => $attributes) {
                 foreach ($attributes as $attribute) {
                     $attribute->handle($this, $property);
                 }

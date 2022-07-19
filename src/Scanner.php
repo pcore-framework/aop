@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace PCore\Aop;
 
 use Attribute;
-use Composer\Autoload\ClassLoader;
-use PCore\Aop\Collectors\{AspectCollector, PropertyAttributeCollector};
+use PCore\Aop\Collectors\{AspectCollector, PropertyAnnotationCollector};
 use PCore\Aop\Exceptions\ProcessException;
 use PCore\Di\Reflection;
 use PCore\Utils\Filesystem;
@@ -24,23 +23,20 @@ use Throwable;
 final class Scanner
 {
 
-    private static ClassLoader $loader;
     private static AstManager $astManager;
     private static string $runtimeDir;
     private static string $proxyMap;
     private static array $classMap = [];
-    private static array $collectors = [AspectCollector::class, PropertyAttributeCollector::class];
+    private static array $collectors = [AspectCollector::class, PropertyAnnotationCollector::class];
     private static bool $initialized = false;
 
     /**
-     * @param ClassLoader $loader
      * @param ScannerConfig $config
      * @throws ReflectionException
      */
-    public static function init(ClassLoader $loader, ScannerConfig $config): void
+    public static function init(ScannerConfig $config): void
     {
         if (!self::$initialized) {
-            self::$loader = $loader;
             self::$runtimeDir = $config->getRuntimeDir() . '/aop/';
             Filesystem::isDirectory(self::$runtimeDir) || Filesystem::makeDirectory(self::$runtimeDir, 0755, true);
             self::$astManager = new AstManager();
@@ -53,15 +49,10 @@ final class Scanner
                 }
                 pcntl_wait($pid);
             }
-            $loader->addClassMap(self::getProxyMap(self::$collectors));
+            Composer::getClassLoader()->addClassMap(self::getProxyMap(self::$collectors));
             self::collect([...self::$collectors, ...$config->getCollectors()]);
             self::$initialized = true;
         }
-    }
-
-    public static function getLoader(): ClassLoader
-    {
-        return self::$loader;
     }
 
     public static function scanDir(array $dirs): array
@@ -117,7 +108,7 @@ final class Scanner
             Filesystem::makeDirectory($proxyDir, 0755, true, true);
             Filesystem::cleanDirectory($proxyDir);
             self::collect($collectors);
-            $collectedClasses = array_unique(array_merge(AspectCollector::getCollectedClasses(), PropertyAttributeCollector::getCollectedClasses()));
+            $collectedClasses = array_unique(array_merge(AspectCollector::getCollectedClasses(), PropertyAnnotationCollector::getCollectedClasses()));
             $scanMap = [];
             foreach ($collectedClasses as $class) {
                 $proxyPath = $proxyDir . str_replace('\\', '_', $class) . '_Proxy.php';
@@ -134,7 +125,7 @@ final class Scanner
     {
         $ast = self::$astManager->getNodes($path);
         $traverser = new NodeTraverser();
-        $metadata = new Metadata(self::$loader, $class);
+        $metadata = new Metadata($class);
         $traverser->addVisitor(new PropertyHandlerVisitor($metadata));
         $traverser->addVisitor(new ProxyHandlerVisitor($metadata));
         $modifiedStmts = $traverser->traverse($ast);

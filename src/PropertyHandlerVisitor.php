@@ -15,6 +15,7 @@ use PhpParser\Node\Stmt\{Class_, ClassMethod, Expression, If_, TraitUse};
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionUnionType;
+use PCore\Utils\Composer;
 
 /**
  * Class PropertyHandlerVisitor
@@ -45,7 +46,7 @@ class PropertyHandlerVisitor extends NodeVisitorAbstract
             $reflectionClass = Reflection::class($this->metadata->className);
             if ($reflectionConstructor = $reflectionClass->getConstructor()) {
                 $declaringClass = $reflectionConstructor->getDeclaringClass()->getName();
-                if ($classPath = $this->metadata->loader->findFile($declaringClass)) {
+                if ($classPath = Composer::getClassLoader()->findFile($declaringClass)) {
                     $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
                     $ast = $parser->parse(file_get_contents($classPath));
                     foreach ($ast as $stmt) {
@@ -70,7 +71,8 @@ class PropertyHandlerVisitor extends NodeVisitorAbstract
                         || ($type->getName()) === 'Closure') {
                         continue;
                     }
-                    $params[$key]->type = new Name('\\' . $type->getName());
+                    $allowsNull = $reflectionParameter->allowsNull() ? '?' : '';
+                    $params[$key]->type = new Name($allowsNull . '\\' . $type->getName());
                 }
             }
             $c = [];
