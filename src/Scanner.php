@@ -8,6 +8,7 @@ use Attribute;
 use PCore\Aop\Collectors\{AspectCollector, PropertyAnnotationCollector};
 use PCore\Aop\Exceptions\ProcessException;
 use PCore\Di\Reflection;
+use PCore\Utils\Composer;
 use PCore\Utils\Filesystem;
 use PhpParser\NodeTraverser;
 use PhpParser\PrettyPrinter\Standard;

@@ -17,12 +17,12 @@ class AspectConfig
 
     /**
      * @param string $class
-     * @param string $method
+     * @param string|array $methods
      * @param array $params
      */
     public function __construct(
         public string $class,
-        public string $method = '*',
+        public string|array $methods = '*',
         public array $params = []
     )
     {
